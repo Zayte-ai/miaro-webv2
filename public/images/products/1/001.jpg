@@ -1,0 +1,5 @@
+This is a placeholder for the frame 001.jpg file. 
+
+In a real implementation, this would be a JPG file with a 360-degree view of the product. 
+
+For proper implementation, add 35 sequentially numbered image frames (001.jpg through 035.jpg) for each product in its respective ID folder.

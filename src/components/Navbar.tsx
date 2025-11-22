@@ -1,0 +1,142 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useCartStore } from "@/store/cart";
+import { useUserStore } from "@/store/user";
+import { ShoppingBag, Menu, X, User, Search } from "lucide-react";
+
+export default function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { cart } = useCartStore();
+  const { isAuthenticated } = useUserStore();
+
+  const navigation = [
+    { name: "Home", href: "/" },
+    { name: "Shop", href: "/shop" },
+    { name: "Contact", href: "/contact" },
+  ];
+
+  return (
+    <nav className="bg-white shadow-sm sticky top-0 z-50 select-none">
+      {/* League Spartan font import for navbar links */}
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;500;700&display=swap");
+      `}</style>
+      <div className="w-full mx-auto px-10 sm:px-15 lg:px-20">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0 max-w-[180px]">
+            <Link
+              href="/"
+              className="text-4xl font-bold text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis"
+              style={{ fontFamily: "Instrument Serif, serif", maxWidth: "180px", width: "100%", display: "block" }}
+            >
+              MIARO
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-8">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-gray-600 hover:text-gray-900 px-4 py-2 text-lg font-normal transition-colors relative after:content-[''] after:block after:h-0.5 after:bg-gray-900 after:w-full after:rounded-full after:scale-x-0 hover:after:scale-x-100"
+                  style={{ fontFamily: "League Spartan, sans-serif" }}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Right side icons */}
+          <div className="flex items-center space-x-5">
+            {/* Search */}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <Search className="h-6 w-6" />
+            </button>
+
+            {/* User */}
+            {isAuthenticated ? (
+              <Link
+                href="/profile"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <User className="h-6 w-6" />
+              </Link>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <User className="h-6 w-6" />
+              </Link>
+            )}
+
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className="text-gray-600 hover:text-gray-900 transition-colors relative"
+            >
+              <ShoppingBag className="h-6 w-6" />
+              {cart.itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.itemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar (Mobile/Desktop) */}
+        {isSearchOpen && (
+          <div className="py-4 border-t">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            />
+          </div>
+        )}
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 border-t">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
+                  style={{ fontFamily: "League Spartan, sans-serif" }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}

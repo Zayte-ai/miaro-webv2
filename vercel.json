@@ -1,0 +1,13 @@
+{
+  "buildCommand": "prisma generate && next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "DIRECT_URL": "@direct_url",
+    "ADMIN_EMAIL": "@admin_email",
+    "ADMIN_PASSWORD": "@admin_password",
+    "JWT_SECRET": "@jwt_secret",
+    "NEXT_PUBLIC_API_URL": "@api_url"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" npx prisma migrate dev --name init)",
+      "Bash(npm install:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(DATABASE_URL=\"postgresql://maisonmiaro_user:maisonmiaro_pass@localhost:5432/maisonmiaro_db\" npx prisma migrate dev --name \"init_postgresql\")",
+      "Bash(DATABASE_URL=\"postgresql://maisonmiaro_user:maisonmiaro_pass@localhost:5432/maisonmiaro_db\" npm run db:seed)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

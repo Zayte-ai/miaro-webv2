@@ -1,0 +1,336 @@
+import {
+  Body,
+  Container,
+  Column,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Row,
+  Section,
+  Text,
+} from "@react-email/components";
+import * as React from "react";
+
+interface OrderConfirmationEmailProps {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  shippingAddress: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    image?: string;
+  }>;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  estimatedDelivery: string;
+}
+
+export const OrderConfirmationEmail = ({
+  orderNumber,
+  customerName,
+  shippingAddress,
+  items,
+  subtotal,
+  shipping,
+  tax,
+  total,
+  estimatedDelivery,
+}: OrderConfirmationEmailProps) => {
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  return (
+    <Html>
+      <Head />
+      <Preview>
+        Your Maison Miaro Order Confirmation - Order #{orderNumber}
+      </Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={logo}>
+            <Img
+              src={`${process.env.NEXT_PUBLIC_APP_URL}/images/logo.png`}
+              alt="Maison Miaro"
+              width="120"
+              height="40"
+            />
+          </Section>
+
+          <Section style={content}>
+            <Heading style={heading}>Order Confirmation</Heading>
+            <Text style={paragraph}>Dear {customerName},</Text>
+            <Text style={paragraph}>
+              Thank you for your order! We've received your purchase and will
+              begin processing it right away.
+            </Text>
+
+            <Section style={orderInfo}>
+              <Row>
+                <Column>
+                  <Text style={label}>Order Number</Text>
+                  <Text style={value}>#{orderNumber}</Text>
+                </Column>
+                <Column>
+                  <Text style={label}>Estimated Delivery</Text>
+                  <Text style={value}>{estimatedDelivery}</Text>
+                </Column>
+              </Row>
+            </Section>
+
+            <Section style={productList}>
+              {items.map((item, index) => (
+                <Row key={index} style={productRow}>
+                  {item.image && (
+                    <Column style={productImageContainer}>
+                      <Img
+                        src={item.image}
+                        alt={item.name}
+                        width="80"
+                        height="80"
+                        style={productImage}
+                      />
+                    </Column>
+                  )}
+                  <Column>
+                    <Text style={productName}>{item.name}</Text>
+                    <Text style={productQuantity}>
+                      Quantity: {item.quantity}
+                    </Text>
+                    <Text style={productPrice}>{formatPrice(item.price)}</Text>
+                  </Column>
+                </Row>
+              ))}
+            </Section>
+
+            <Section style={totals}>
+              <Row style={totalRow}>
+                <Column>
+                  <Text style={totalLabel}>Subtotal</Text>
+                </Column>
+                <Column>
+                  <Text style={totalValue}>{formatPrice(subtotal)}</Text>
+                </Column>
+              </Row>
+              <Row style={totalRow}>
+                <Column>
+                  <Text style={totalLabel}>Shipping</Text>
+                </Column>
+                <Column>
+                  <Text style={totalValue}>{formatPrice(shipping)}</Text>
+                </Column>
+              </Row>
+              <Row style={totalRow}>
+                <Column>
+                  <Text style={totalLabel}>Tax</Text>
+                </Column>
+                <Column>
+                  <Text style={totalValue}>{formatPrice(tax)}</Text>
+                </Column>
+              </Row>
+              <Row style={totalRow}>
+                <Column>
+                  <Text style={totalLabel}>Total</Text>
+                </Column>
+                <Column>
+                  <Text style={totalValue}>{formatPrice(total)}</Text>
+                </Column>
+              </Row>
+            </Section>
+
+            <Section style={shipping}>
+              <Text style={label}>Shipping Address</Text>
+              <Text style={address}>
+                {shippingAddress.line1}
+                <br />
+                {shippingAddress.line2 && (
+                  <>
+                    {shippingAddress.line2}
+                    <br />
+                  </>
+                )}
+                {shippingAddress.city}, {shippingAddress.state}{" "}
+                {shippingAddress.postal_code}
+                <br />
+                {shippingAddress.country}
+              </Text>
+            </Section>
+
+            <Section style={footer}>
+              <Text style={footerText}>
+                Questions? Contact our support team at{" "}
+                <Link href="mailto:support@maisonmiaro.com" style={link}>
+                  support@maisonmiaro.com
+                </Link>
+              </Text>
+            </Section>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
+
+export default OrderConfirmationEmail;
+
+const main = {
+  backgroundColor: "#f6f9fc",
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+};
+
+const container = {
+  margin: "0 auto",
+  padding: "20px 0 48px",
+  maxWidth: "600px",
+};
+
+const logo = {
+  margin: "0 auto",
+  padding: "20px 0",
+  textAlign: "center" as const,
+};
+
+const content = {
+  backgroundColor: "#ffffff",
+  padding: "32px",
+  borderRadius: "8px",
+};
+
+const heading = {
+  fontSize: "24px",
+  letterSpacing: "-0.5px",
+  lineHeight: "1.3",
+  fontWeight: "400",
+  color: "#484848",
+  padding: "17px 0 0",
+};
+
+const paragraph = {
+  margin: "0 0 15px",
+  fontSize: "15px",
+  lineHeight: "1.4",
+  color: "#3c4149",
+};
+
+const orderInfo = {
+  padding: "24px 0",
+  borderTop: "1px solid #e6ebf1",
+  borderBottom: "1px solid #e6ebf1",
+};
+
+const label = {
+  fontSize: "13px",
+  color: "#8898aa",
+  marginBottom: "4px",
+};
+
+const value = {
+  fontSize: "15px",
+  color: "#3c4149",
+  margin: "0",
+};
+
+const productList = {
+  padding: "24px 0",
+};
+
+const productRow = {
+  padding: "8px 0",
+};
+
+const productImageContainer = {
+  paddingRight: "16px",
+};
+
+const productImage = {
+  borderRadius: "4px",
+  objectFit: "cover" as const,
+};
+
+const productName = {
+  fontSize: "15px",
+  color: "#3c4149",
+  margin: "0 0 4px",
+  fontWeight: "500",
+};
+
+const productQuantity = {
+  fontSize: "13px",
+  color: "#8898aa",
+  margin: "0",
+};
+
+const productPrice = {
+  fontSize: "13px",
+  color: "#8898aa",
+  margin: "4px 0 0",
+};
+
+const totals = {
+  padding: "24px 0",
+  borderTop: "1px solid #e6ebf1",
+};
+
+const totalRow = {
+  padding: "4px 0",
+};
+
+const totalLabel = {
+  fontSize: "14px",
+  color: "#8898aa",
+  margin: "0",
+};
+
+const totalValue = {
+  fontSize: "14px",
+  color: "#3c4149",
+  margin: "0",
+  fontWeight: "500",
+};
+
+const shipping = {
+  padding: "24px 0",
+  borderTop: "1px solid #e6ebf1",
+};
+
+const address = {
+  fontSize: "14px",
+  color: "#3c4149",
+  margin: "4px 0 0",
+  lineHeight: "1.5",
+};
+
+const footer = {
+  padding: "24px 0 0",
+  borderTop: "1px solid #e6ebf1",
+};
+
+const footerText = {
+  fontSize: "13px",
+  color: "#8898aa",
+  margin: "0",
+  textAlign: "center" as const,
+};
+
+const link = {
+  color: "#556cd6",
+  textDecoration: "underline",
+};
