@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const getRangeDates = (range: string) => {
   const now = new Date();
   const rangeData = {
@@ -121,5 +124,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-export const revalidate = 600; // Revalidate every 10 minutes

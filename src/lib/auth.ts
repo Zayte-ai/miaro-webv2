@@ -105,7 +105,7 @@ export async function authenticateAdmin(email: string, password: string) {
     };
   } catch (error) {
     console.error('Admin authentication error:', error);
-    return { success: false, message: 'Authentication failed' };
+    return { success: false, message: 'Server error. Please try again.' };
   }
 }
 
@@ -132,7 +132,7 @@ export async function registerUser(userData: {
         email: userData.email.toLowerCase(),
         firstName: userData.firstName,
         lastName: userData.lastName,
-        phone: userData.phone,
+        ...(userData.phone && { phone: userData.phone }),
         passwordHash: hashedPassword,
       },
     });

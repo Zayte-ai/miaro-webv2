@@ -59,12 +59,27 @@ export default function OrdersPage() {
   const { adminToken } = useAdminStore();
 
   useEffect(() => {
+    // Only fetch orders when we have an admin token available.
+    // The admin token is persisted client-side; wait for it to hydrate.
+    if (!adminToken) {
+      setLoading(false);
+      setError('Not authenticated as admin');
+      setOrders([]);
+      return;
+    }
+
     fetchOrders();
-  }, [statusFilter, searchTerm]);
+  }, [statusFilter, searchTerm, adminToken]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      if (!adminToken) {
+        setError('Not authenticated as admin');
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
       const params = new URLSearchParams();
 
       if (statusFilter !== "all") {
@@ -82,7 +97,8 @@ export default function OrdersPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch orders");
+        const text = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText} ${text}`);
       }
 
       const data = await response.json();
@@ -119,7 +135,8 @@ export default function OrdersPage() {
       fetchOrders();
     } catch (err) {
       console.error("Error updating order:", err);
-      alert("Failed to update order status");
+      // alert("Failed to update order status");
+      console.error("Failed to update order status");
     }
   };
 

@@ -3,14 +3,24 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
-import { CheckoutForm } from "@/components/checkout/EmbeddedCheckout";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -22,6 +32,59 @@ export default function CheckoutPage() {
       router.push("/cart");
     }
   }, [mounted, cart.items.length, router]);
+
+  // Create Stripe Checkout Session
+  useEffect(() => {
+    if (!mounted || cart.items.length === 0) return;
+
+    const createSession = async () => {
+      try {
+        const response = await fetch(
+          "/api/payments/stripe/create-checkout-session",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: cart.items.map((item) => ({
+                productId: item.product.id,
+                sizeId: item.selectedSize?.id,
+                colorId: item.selectedColor?.id,
+                quantity: item.quantity,
+              })),
+              metadata: {
+                cartId: "default",
+                items: JSON.stringify(
+                  cart.items.map((item) => ({
+                    productId: item.product.id,
+                    name: item.product.name,
+                    size: item.selectedSize?.value,
+                    color: item.selectedColor?.name,
+                    quantity: item.quantity,
+                  }))
+                ),
+              },
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          // Handle stock validation errors specifically
+          if (data.code === 'INSUFFICIENT_STOCK') {
+            throw new Error(data.error || `Insufficient stock. Please update your cart.`);
+          }
+          throw new Error(data.error || "Failed to create checkout session");
+        }
+
+        setClientSecret(data.clientSecret);
+      } catch (err) {
+        console.error("Checkout error:", err);
+        setError(err instanceof Error ? err.message : "Unable to load checkout");
+      }
+    };
+
+    createSession();
+  }, [mounted, cart.items]);
 
   if (!mounted) {
     return (
@@ -53,18 +116,35 @@ export default function CheckoutPage() {
     );
   }
 
-  // Transform cart items to checkout format
-  const checkoutItems = cart.items.map((item) => ({
-    productId: item.product.id,
-    variantId: `${item.selectedSize.id}-${item.selectedColor.id}`,
-    name: item.product.name,
-    description: `Size: ${item.selectedSize.value}, Color: ${item.selectedColor.name}`,
-    price: item.product.price,
-    quantity: item.quantity,
-    image: item.product.images[0],
-    size: item.selectedSize.value,
-    color: item.selectedColor.name,
-  }));
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            Checkout Error
+          </h1>
+          <p className="text-red-600 mb-8">{error}</p>
+          <Link
+            href="/cart"
+            className="bg-gray-900 text-white px-8 py-3 rounded-md font-medium hover:bg-gray-800 transition-colors inline-block"
+          >
+            Return to Cart
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Preparing checkout...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,51 +157,17 @@ export default function CheckoutPage() {
           </p>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Order Summary
-          </h2>
-          <div className="space-y-3">
-            {cart.items.map((item) => (
-              <div
-                key={`${item.product.id}-${item.selectedSize.id}-${item.selectedColor.id}`}
-                className="flex justify-between text-sm"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{item.product.name}</p>
-                  <p className="text-gray-600">
-                    {item.selectedSize.value} / {item.selectedColor.name} × {item.quantity}
-                  </p>
-                </div>
-                <p className="font-medium text-gray-900">
-                  ${(item.product.price * item.quantity).toFixed(2)}
-                </p>
-              </div>
-            ))}
-            <div className="border-t border-gray-200 pt-3 mt-3">
-              <div className="flex justify-between font-semibold text-gray-900">
-                <span>Subtotal</span>
-                <span>${cart.total.toFixed(2)}</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Shipping and taxes calculated at checkout
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Embedded Checkout */}
+        {/* Stripe Embedded Checkout */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <CheckoutForm
-            items={checkoutItems}
-            metadata={{
-              cartId: `cart_${Date.now()}`,
-              itemCount: cart.itemCount.toString(),
-            }}
-          />
+          <EmbeddedCheckoutProvider
+            stripe={stripePromise}
+            options={{ clientSecret }}
+          >
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
         </div>
       </div>
     </div>
   );
 }
+

@@ -109,8 +109,13 @@ export const useCartStore = create<CartState & CartActions>()(
             return { items: updatedItems };
           } else {
             // Add new item
+            const baseKey = `${product.id}-${size.id}-${color.id}`;
+            // Use stable key per product variant to avoid non-deterministic values
+            // during SSR which can cause hydration mismatches. If multiple
+            // separate cart lines for the same variant are needed, generate
+            // a UUID client-side when adding (not during SSR).
             const newItem: CartItem = {
-              id: `${product.id}-${size.id}-${color.id}-${Date.now()}`,
+              id: baseKey,
               product,
               quantity,
               selectedSize: size,

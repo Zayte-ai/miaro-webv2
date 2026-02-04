@@ -36,8 +36,8 @@ export const products: Product[] = [
     name: 'Classic White Tee',
     description: 'A timeless white t-shirt made from premium organic cotton. Perfect for everyday wear with a comfortable fit and durable construction.',
     price: 29.99,
-    images: ['/images/products/white-tee-1.jpg', '/images/products/white-tee-2.jpg'],
-    imageFrames: 35,
+  images: ['/project/360/001.jpg'],
+  imageFrames: 36,
     model3d: '/models/white-tee.glb',
     category: categories[0],
     sizes: sizes.slice(0, 5),
@@ -110,6 +110,21 @@ export const products: Product[] = [
     createdAt: new Date('2024-03-01'),
     updatedAt: new Date('2024-03-01'),
   },
+  {
+    id: '6',
+    name: 'Demo 360 Item',
+    description: 'Demo product showing 360° image rotation. Use drag or slider to rotate.',
+    price: 49.99,
+    images: ['/images/products/6/001.jpg'],
+    imageFrames: 36,
+    category: categories[4],
+    sizes: [{ id: 'os', name: 'One Size', value: 'OS' }],
+    colors: [colors[0]],
+    inStock: true,
+    featured: false,
+    createdAt: new Date('2024-03-01T00:00:00.000Z'),
+    updatedAt: new Date('2024-03-01T00:00:00.000Z'),
+  },
 ];
 
 // Function to get products by category
@@ -139,10 +154,11 @@ export function searchProducts(query: string): Product[] {
 }
 
 // Admin management functions
+let _nextCategoryId = 100;
 export const addCategory = (category: Omit<Category, 'id'>): Category => {
   const newCategory: Category = {
     ...category,
-    id: Date.now().toString(), // Simple ID generation for demo
+    id: String(_nextCategoryId++),
   };
   categories.push(newCategory);
   return newCategory;
@@ -163,12 +179,13 @@ export const deleteCategory = (categoryId: string): boolean => {
   return false;
 };
 
+let _nextProductId = 1000;
 export const addProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Product => {
   const newProduct: Product = {
     ...productData,
-    id: Date.now().toString(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: String(_nextProductId++),
+    createdAt: new Date('2024-03-01T00:00:00.000Z'),
+    updatedAt: new Date('2024-03-01T00:00:00.000Z'),
   };
   products.push(newProduct);
   return newProduct;

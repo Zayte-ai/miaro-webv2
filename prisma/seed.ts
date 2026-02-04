@@ -24,14 +24,17 @@ async function main() {
       // Update password and ensure account is active on re-seed
       passwordHash: adminPasswordHash,
       isActive: true,
+      updatedAt: new Date(),
     },
     create: {
+      id: 'admin-1',
       email: adminEmail,
       passwordHash: adminPasswordHash,
       firstName: 'Admin',
       lastName: 'User',
       role: AdminRole.SUPER_ADMIN,
       isActive: true,
+      updatedAt: new Date(),
     },
   });
 
@@ -568,7 +571,7 @@ async function main() {
       status: 'CONFIRMED',
       paymentStatus: 'CAPTURED',
       fulfillmentStatus: 'UNFULFILLED',
-      tags: 'first-time-customer,discount-applied',
+      tags: ['first-time-customer', 'discount-applied'],
       items: {
         create: [
           {

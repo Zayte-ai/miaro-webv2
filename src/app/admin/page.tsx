@@ -111,17 +111,6 @@ export default function AdminLoginPage() {
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
           </div>
-
-          {/* Demo credentials info */}
-          <div className="mt-4 p-4 bg-blue-50 rounded-md">
-            <p className="text-sm text-blue-800 font-medium">
-              Demo Credentials:
-            </p>
-            <p className="text-sm text-blue-600">
-              Email: admin@maisonmiaro.com
-            </p>
-            <p className="text-sm text-blue-600">Password: admin123</p>
-          </div>
         </form>
       </div>
     </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useRef } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Environment } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 interface Product3DViewerProps {
@@ -11,17 +11,31 @@ interface Product3DViewerProps {
 }
 
 function Model({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
-  const meshRef = useRef<THREE.Group>(null);
+  const [error, setError] = useState(false);
+  
+  try {
+    const { scene } = useGLTF(url, undefined, undefined, (error) => {
+      console.error("Error loading 3D model:", error);
+      setError(true);
+    });
+    const meshRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y =
-        Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    useFrame((state) => {
+      if (meshRef.current) {
+        meshRef.current.rotation.y =
+          Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+      }
+    });
+
+    if (error) {
+      return <ModelPlaceholder />;
     }
-  });
 
-  return <primitive ref={meshRef} object={scene} scale={1.5} />;
+    return <primitive ref={meshRef} object={scene} scale={1.5} />;
+  } catch (err) {
+    console.error("Model loading error:", err);
+    return <ModelPlaceholder />;
+  }
 }
 
 function ModelPlaceholder() {
@@ -47,6 +61,11 @@ export default function Product3DViewer({
   modelPath,
   className = "",
 }: Product3DViewerProps) {
+  // Valider que le modelPath est un fichier .glb ou .gltf valide
+  const isValidModelPath = modelPath && 
+    (modelPath.endsWith('.glb') || modelPath.endsWith('.gltf')) &&
+    (modelPath.startsWith('/') || modelPath.startsWith('http'));
+
   return (
     <div
       className={`w-full h-96 bg-gray-100 rounded-lg overflow-hidden relative ${className}`}
@@ -56,11 +75,13 @@ export default function Product3DViewer({
         className="w-full h-full"
       >
         <Suspense fallback={null}>
-          <Environment preset="studio" />
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 5]} intensity={1} />
+          {/* Environment simple sans HDR externe */}
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[10, 10, 5]} intensity={1.2} />
+          <directionalLight position={[-10, -10, -5]} intensity={0.5} />
+          <pointLight position={[0, 5, 0]} intensity={0.5} />
 
-          {modelPath ? <Model url={modelPath} /> : <ModelPlaceholder />}
+          {isValidModelPath ? <Model url={modelPath} /> : <ModelPlaceholder />}
 
           <OrbitControls
             enablePan={true}
@@ -72,7 +93,7 @@ export default function Product3DViewer({
         </Suspense>
       </Canvas>
 
-      {!modelPath && (
+      {!isValidModelPath && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-90">
           <div className="text-center">
             <div className="text-gray-500 text-sm">3D Model Preview</div>

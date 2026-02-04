@@ -48,3 +48,19 @@ export async function requireAdmin(
 
   return admin;
 }
+
+/**
+ * Vérifier un token admin sans faire de requête à la base de données
+ * Utilisé pour des opérations simples
+ */
+export function verifyAdminToken(token: string): { userId: string; isAdmin: boolean } | null {
+  try {
+    const payload = verifyToken(token);
+    if (!payload?.userId || !payload.isAdmin) {
+      return null;
+    }
+    return { userId: payload.userId, isAdmin: payload.isAdmin };
+  } catch {
+    return null;
+  }
+}

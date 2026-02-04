@@ -29,7 +29,18 @@ export function slugify(text: string): string {
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
+  // Prefer deterministic environments to avoid SSR/client mismatches.
+  // Use `crypto.randomUUID()` when available (client-side), otherwise fall back
+  // to a small pseudo-random string. Components that need stable IDs during
+  // SSR should avoid calling this at render time.
+  if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+    try {
+      return (crypto as any).randomUUID();
+    } catch (e) {
+      // fallthrough
+    }
+  }
+  return Math.random().toString(36).substring(2, 11);
 }
 
 // Debounce function for search inputs

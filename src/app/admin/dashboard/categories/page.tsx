@@ -134,7 +134,8 @@ export default function CategoriesPage() {
     event.preventDefault();
 
     if (!formData.name.trim() || !formData.slug.trim()) {
-      alert("Please complete all required fields");
+      // alert("Please complete all required fields");
+      console.error("Required fields missing");
       return;
     }
 
@@ -144,11 +145,13 @@ export default function CategoriesPage() {
     );
 
     if (duplicateSlug) {
-      alert("A category with this slug already exists");
+      // alert("A category with this slug already exists");
+      console.error("Duplicate slug");
       return;
     }
     if (!adminToken) {
-      alert("You must be logged in as an admin to manage categories.");
+      // alert("You must be logged in as an admin to manage categories.");
+      console.error("Admin login required");
       return;
     }
 
@@ -229,7 +232,8 @@ export default function CategoriesPage() {
       )
     ) {
       if (!adminToken) {
-        alert("You must be logged in as an admin to delete categories.");
+        // alert("You must be logged in as an admin to delete categories.");
+        console.error("Admin login required for delete");
         return;
       }
 
@@ -248,7 +252,7 @@ export default function CategoriesPage() {
         })
         .catch((error) => {
           console.error("Category deletion failed", error);
-          alert((error as Error).message ?? "Failed to delete category");
+          // alert((error as Error).message ?? "Failed to delete category");
         });
     }
   };

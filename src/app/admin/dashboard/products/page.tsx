@@ -187,7 +187,7 @@ export default function ProductsPage() {
       );
     } catch (error) {
       console.error("Product deletion failed", error);
-      alert((error as Error).message ?? "Failed to delete product");
+      // alert((error as Error).message ?? "Failed to delete product");
     }
   };
 
@@ -208,7 +208,8 @@ export default function ProductsPage() {
 
     const nextQuantity = Number.parseInt(input, 10);
     if (Number.isNaN(nextQuantity) || nextQuantity < 0) {
-      alert("Please enter a valid non-negative number");
+      // alert("Please enter a valid non-negative number");
+      console.error("Invalid number entered");
       return;
     }
 
@@ -232,7 +233,7 @@ export default function ProductsPage() {
       );
     } catch (error) {
       console.error("Failed to update inventory", error);
-      alert((error as Error).message ?? "Failed to update inventory");
+      // alert((error as Error).message ?? "Failed to update inventory");
     }
   };
 

@@ -8,20 +8,17 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100');
 
-// Clean up old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of rateLimitMap.entries()) {
-    if (now > value.resetTime) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, 60000); // Clean up every minute
-
+// Lazy cleanup - remove expired entries during rate limit check
 function rateLimit(identifier: string): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(identifier);
 
+  // Lazy cleanup: if record exists but is expired, remove it
+  if (record && now > record.resetTime) {
+    rateLimitMap.delete(identifier);
+  }
+
+  // Create new record or check existing
   if (!record || now > record.resetTime) {
     rateLimitMap.set(identifier, {
       count: 1,
@@ -86,7 +83,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/admin/auth')
   ) {
     // Use IP address for rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const identifier = `auth:${ip}`;
 
     if (!rateLimit(identifier)) {
@@ -107,7 +104,7 @@ export function middleware(request: NextRequest) {
 
   // Rate limit general API routes (less strict)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/webhooks/')) {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const identifier = `api:${ip}`;
 
     // Allow more requests for general API

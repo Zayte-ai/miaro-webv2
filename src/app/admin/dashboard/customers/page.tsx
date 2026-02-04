@@ -144,7 +144,8 @@ export default function CustomersPage() {
       fetchCustomers();
     } catch (err) {
       console.error("Error updating customer:", err);
-      alert("Failed to update customer status");
+      // alert("Failed to update customer status");
+      console.error("Failed to update customer status");
     }
   };
 

@@ -14,6 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { useAdminStore } from "@/store/admin";
 
 interface AnalyticsData {
   revenue: {
@@ -74,16 +75,28 @@ export default function AnalyticsPage() {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const { adminToken } = useAdminStore();
 
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
+      if (!adminToken) {
+        console.error('No admin token available');
+        loadMockData();
+        setLoading(false);
+        return;
+      }
+
+      const headers = {
+        Authorization: `Bearer ${adminToken}`,
+      };
+
       const [analyticsRes, salesRes, productsRes, categoriesRes] =
         await Promise.all([
-          fetch(`/api/admin/analytics/metrics?range=${dateRange}`),
-          fetch(`/api/admin/analytics/sales?range=${dateRange}`),
-          fetch(`/api/admin/analytics/top-products?range=${dateRange}`),
-          fetch(`/api/admin/analytics/categories?range=${dateRange}`),
+          fetch(`/api/admin/analytics/metrics?range=${dateRange}`, { headers }),
+          fetch(`/api/admin/analytics/sales?range=${dateRange}`, { headers }),
+          fetch(`/api/admin/analytics/top-products?range=${dateRange}`, { headers }),
+          fetch(`/api/admin/analytics/categories?range=${dateRange}`, { headers }),
         ]);
 
       if (analyticsRes.ok) {
@@ -172,14 +185,26 @@ export default function AnalyticsPage() {
   };
 
   useEffect(() => {
-    fetchAnalyticsData();
+    if (adminToken) {
+      fetchAnalyticsData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange]);
+  }, [dateRange, adminToken]);
 
   const exportData = async () => {
     try {
+      if (!adminToken) {
+        console.error('No admin token available');
+        return;
+      }
+
       const response = await fetch(
-        `/api/admin/analytics/export?range=${dateRange}`
+        `/api/admin/analytics/export?range=${dateRange}`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }
       );
       if (!response.ok) {
         return;

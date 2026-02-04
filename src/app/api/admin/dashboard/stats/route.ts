@@ -7,99 +7,66 @@ export async function GET(request: NextRequest) {
     // Require admin authentication
     await requireAdmin(request);
 
-    // Get total counts
-    const [
-      totalProducts,
-      totalOrders,
-      totalCustomers,
-      totalRevenue,
-      recentOrders,
-      lowStockProducts,
-    ] = await Promise.all([
-      // Total products
-      prisma.product.count({
-        where: { isActive: true },
-      }),
+    // Get total counts (run queries individually so one failing column doesn't break everything)
+    let totalProducts = 0;
+    let totalOrders = 0;
+    let totalCustomers = 0;
+    let totalRevenue: any = { _sum: { totalAmount: 0 } };
+    let recentOrders: any[] = [];
+    let lowStockProducts: any[] = [];
 
-      // Total orders (excluding canceled/refunded)
-      prisma.order.count({
-        where: {
-          status: {
-            notIn: ['CANCELED', 'REFUNDED'],
-          },
-        },
-      }),
+    try {
+      totalProducts = await prisma.product.count({ where: { isActive: true } });
+    } catch (e) {
+      console.error('Error counting products', e);
+    }
 
-      // Total customers
-      prisma.user.count({
-        where: { isActive: true },
-      }),
+    try {
+      totalOrders = await prisma.order.count({
+        where: { status: { notIn: ['CANCELED', 'REFUNDED'] } },
+      });
+    } catch (e) {
+      console.error('Error counting orders', e);
+    }
 
-      // Total revenue
-      prisma.order.aggregate({
-        where: {
-          status: {
-            notIn: ['CANCELED', 'REFUNDED'],
-          },
-        },
-        _sum: {
-          totalAmount: true,
-        },
-      }),
+    try {
+      totalCustomers = await prisma.user.count({ where: { isActive: true } });
+    } catch (e) {
+      console.error('Error counting customers', e);
+    }
 
-      // Recent orders
-      prisma.order.findMany({
+    try {
+      totalRevenue = await prisma.order.aggregate({
+        where: { status: { notIn: ['CANCELED', 'REFUNDED'] } },
+        _sum: { totalAmount: true },
+      });
+    } catch (e) {
+      console.error('Error aggregating revenue', e);
+    }
+
+    try {
+      recentOrders = await prisma.order.findMany({
         take: 5,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
         include: {
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-          items: {
-            include: {
-              product: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+          user: { select: { firstName: true, lastName: true, email: true } },
+          items: { include: { product: { select: { name: true } } } },
         },
-      }),
+      });
+    } catch (e) {
+      console.error('Error fetching recent orders', e);
+    }
 
-      // Low stock products
-      prisma.product.findMany({
-        where: {
-          isActive: true,
-          inventory: {
-            quantity: {
-              lte: prisma.productInventory.fields.lowStockThreshold,
-            },
-          },
-        },
+    try {
+      lowStockProducts = await prisma.product.findMany({
+        where: { isActive: true },
         take: 5,
-        include: {
-          inventory: true,
-          images: {
-            take: 1,
-            orderBy: {
-              sortOrder: 'asc',
-            },
-          },
-        },
-        orderBy: {
-          inventory: {
-            quantity: 'asc',
-          },
-        },
-      }),
-    ]);
+        include: { inventory: true, images: { take: 1, orderBy: { sortOrder: 'asc' } } },
+        orderBy: { inventory: { quantity: 'asc' } },
+      });
+    } catch (e) {
+      console.error('Error fetching low stock products', e);
+    }
 
     // Calculate new customers in the last 30 days
     const thirtyDaysAgo = new Date();

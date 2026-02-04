@@ -39,6 +39,9 @@ function buildProductResponse(product: any) {
     publishedAt: product.publishedAt,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
+    model3d: product.model3d,
+    imageFrames: product.imageFrames,
+    rotationImage360Url: product.rotationImage360Url,
   };
 }
 
@@ -101,6 +104,15 @@ interface UpdateProductPayload {
     lowStockThreshold?: number;
     allowBackorder?: boolean;
   };
+  variants?: Array<{
+    id?: string;
+    name: string;
+    sku?: string | null;
+    price?: number | null;
+    stock?: number;
+    options?: Record<string, string>;
+    isActive?: boolean;
+  }>;
 }
 
 export async function PUT(
@@ -232,6 +244,47 @@ export async function PUT(
               allowBackorder: payload.inventory.allowBackorder ?? false,
             },
           });
+        }
+      }
+
+      // Update variants if provided
+      if (payload.variants) {
+        for (const variant of payload.variants) {
+          if (variant.id) {
+            // Update existing variant
+            await tx.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                name: variant.name,
+                sku: variant.sku && variant.sku.trim() ? variant.sku.trim() : null,
+                price: variant.price ?? null,
+                isActive: variant.isActive ?? true,
+              },
+            });
+
+            // Update variant inventory if stock is provided
+            if (typeof variant.stock === 'number') {
+              const variantInventory = await tx.productVariantInventory.findUnique({
+                where: { productVariantId: variant.id },
+              });
+
+              if (variantInventory) {
+                await tx.productVariantInventory.update({
+                  where: { productVariantId: variant.id },
+                  data: { quantity: variant.stock },
+                });
+              } else {
+                await tx.productVariantInventory.create({
+                  data: {
+                    productVariantId: variant.id,
+                    quantity: variant.stock,
+                    lowStockThreshold: 10,
+                    allowBackorder: false,
+                  },
+                });
+              }
+            }
+          }
         }
       }
 

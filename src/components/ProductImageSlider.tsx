@@ -16,21 +16,30 @@ export default function ProductImageSlider({
   totalFrames = 35,
   className = "",
 }: ProductImageSliderProps) {
-  const [currentFrame, setCurrentFrame] = useState(1);
+  const [currentFrame, setCurrentFrame] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [imagePath, setImagePath] = useState("");
 
   // Generate the image path for the current frame
-  const getFrameImagePath = (frame: number) => {
-    // Format frame number to have leading zeros (e.g., 001, 002, ..., 035)
-    const frameNumber = frame.toString().padStart(3, "0");
+  const getFrameImagePath = (frame: number): string => {
+    const frameNumber = (frame).toString().padStart(3, "0");
     return `${baseImagePath}/${frameNumber}.jpg`;
   };
 
+  // Update image path whenever frame changes
+  useEffect(() => {
+    const newPath = getFrameImagePath(currentFrame);
+    setImagePath(newPath);
+    console.log("📸 Frame", currentFrame, "→", newPath);
+  }, [currentFrame, baseImagePath]);
+
   // Handle slider input change
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentFrame(parseInt(e.target.value));
+    const newFrame = parseInt(e.target.value);
+    console.log("📊 Slider:", newFrame);
+    setCurrentFrame(newFrame);
   };
 
   // Handle touch/mouse events for interactive sliding
@@ -44,13 +53,11 @@ export default function ProductImageSlider({
     if (!isSliding) return;
 
     const deltaX = e.clientX - startX;
-    const frameStep = Math.floor(deltaX / 10); // Adjust sensitivity here
+    const frameStep = Math.floor(deltaX / 10);
 
     if (Math.abs(frameStep) >= 1) {
-      const newFrame = Math.max(
-        1,
-        Math.min(totalFrames, currentFrame + frameStep)
-      );
+      const newFrame = (currentFrame + frameStep + totalFrames * 10) % totalFrames;
+      console.log("🖱️ Drag step", frameStep, "frame", newFrame);
       setCurrentFrame(newFrame);
       setStartX(e.clientX);
     }
@@ -60,6 +67,15 @@ export default function ProductImageSlider({
     setIsSliding(false);
     setIsDragging(false);
   };
+
+  // Preload all images
+  useEffect(() => {
+    for (let i = 0; i < totalFrames; i++) {
+      const img = new window.Image();
+      img.src = getFrameImagePath(i);
+    }
+    console.log("🎬 Preloaded", totalFrames, "frames from", baseImagePath);
+  }, [totalFrames, baseImagePath]);
 
   // Clean up event listeners
   useEffect(() => {
@@ -74,6 +90,8 @@ export default function ProductImageSlider({
     };
   }, []);
 
+  if (!imagePath) return <div className="aspect-square bg-gray-100 rounded-lg" />;
+
   return (
     <div className={`relative ${className}`}>
       {/* Main Image Frame */}
@@ -86,23 +104,18 @@ export default function ProductImageSlider({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        {" "}
         <Image
-          src={getFrameImagePath(currentFrame)}
-          alt={`${productName} - View ${currentFrame}`}
+          key={imagePath}
+          src={imagePath}
+          alt={`${productName} - View ${currentFrame + 1}`}
           fill
+          unoptimized
+          sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover"
-          priority={currentFrame === 1}
-          onError={(e) => {
-            // Fallback to the product's main image if the frame doesn't exist
-            const imgElement = e.currentTarget as HTMLImageElement;
-            imgElement.src = `/images/products/${baseImagePath
-              .split("/")
-              .pop()}-1.jpg`;
-          }}
+          priority={currentFrame === 0}
         />
         <div className="absolute top-4 right-4 bg-white bg-opacity-90 px-3 py-2 rounded-md text-sm font-medium">
-          {currentFrame} / {totalFrames}
+          {currentFrame + 1} / {totalFrames}
         </div>
         {/* Fallback message that will display if images aren't available */}
         <div className="absolute bottom-4 left-0 right-0 text-center">
@@ -116,8 +129,8 @@ export default function ProductImageSlider({
       <div className="mt-4 px-2">
         <input
           type="range"
-          min={1}
-          max={totalFrames}
+          min={0}
+          max={totalFrames - 1}
           value={currentFrame}
           onChange={handleSliderChange}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"

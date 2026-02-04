@@ -129,13 +129,15 @@ export default function SettingsPage() {
     // Validate file type
     const validTypes = ['image/x-icon', 'image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!validTypes.includes(file.type)) {
-      alert('Invalid file type. Please upload .ico, .png, .jpg, or .svg files only.');
+      // alert('Invalid file type. Please upload .ico, .png, .jpg, or .svg files only.');
+      console.error('Invalid file type');
       return;
     }
 
     // Validate file size (max 1MB)
     if (file.size > 1024 * 1024) {
-      alert('File too large. Maximum size is 1MB.');
+      // alert('File too large. Maximum size is 1MB.');
+      console.error('File too large');
       return;
     }
 
@@ -169,10 +171,11 @@ export default function SettingsPage() {
 
       // Update settings with new favicon URL
       handleSettingChange('faviconUrl', data.url);
-      alert('Favicon uploaded successfully!');
+      // alert('Favicon uploaded successfully!');
+      console.log('Favicon uploaded successfully!');
     } catch (error) {
       console.error('Error uploading favicon:', error);
-      alert('Failed to upload favicon');
+      // alert('Failed to upload favicon');
     } finally {
       setUploadingFavicon(false);
     }
@@ -201,10 +204,11 @@ export default function SettingsPage() {
         throw new Error("Failed to save settings");
       }
 
-      alert("Settings saved successfully!");
+      // alert("Settings saved successfully!");
+      console.log("Settings saved successfully!");
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings");
+      // alert("Failed to save settings");
     }
   };
 
@@ -212,18 +216,20 @@ export default function SettingsPage() {
     e.preventDefault();
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("New passwords do not match!");
+      // alert("New passwords do not match!");
+      console.error("Passwords do not match");
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      alert("Password must be at least 8 characters long!");
+      // alert("Password must be at least 8 characters long!");
+      console.error("Password too short");
       return;
     }
 
     // In a real app, this would update the password via API
     console.log("Updating password");
-    alert("Password updated successfully!");
+    // alert("Password updated successfully!");
     setPasswordData({
       currentPassword: "",
       newPassword: "",

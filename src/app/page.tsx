@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HeroVideo from "@/components/HeroVideo";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts } from "@/lib/data";
 
@@ -7,19 +8,10 @@ export default function Home() {
   return (
     <main className="min-h-screen select-none" style={{ userSelect: "none" }}>
       {/* Hero Section */}
-      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[100vh] h-screen flex items-center justify-center overflow-hidden">
         {/* Video Background test */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          src="faceweb.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          disableRemotePlayback
-          controls={false}
-        />
-        <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col justify-start h-full pt-10 md:pt-16">
+        <HeroVideo />
+        <div className="relative z-10 text-center max-w-4xl px-4 flex flex-col justify-center items-center h-full">
           <h1
             className="font-bold text-white mb-6 leading-tight"
             style={{
@@ -39,14 +31,14 @@ export default function Home() {
               <span className="text-black">MIARO</span>
             </span>
           </h1>
-          <div className="mt-32 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/shop"
-              className="explore-collection-btn border border-black text-black px-8 py-4 rounded-full font-light text-lg tracking-wide transition-all group inline-flex items-center hover:text-[#222] hover:border-[#222]"
+              className="explore-collection-btn border border-black text-black px-8 py-4 rounded-full font-light text-lg tracking-wide transition-all group inline-flex items-center hover:text-[#222] hover:border-[#222] flex-shrink-0 whitespace-nowrap min-w-[220px] justify-center"
               style={{
                 fontFamily: "League Spartan, sans-serif",
                 fontWeight: 400,
-                backgroundColor: "rgba(0, 0, 0, 0.20)", // 👈 fond noir avec 5% d’opacité
+                backgroundColor: "transparent",
               }}
             >
               <span className="relative flex flex-row items-center transition-all duration-300 text-black">

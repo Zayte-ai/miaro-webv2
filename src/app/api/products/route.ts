@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { products, searchProducts } from '@/lib/data';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getPublishedProducts } from '@/lib/prisma-products';
 
 // POST: Create a new product in the database (not implemented - use admin API)
 export async function POST(request: NextRequest) {
@@ -12,68 +9,34 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    
     // Get query parameters
-    const search = searchParams.get('search');
-    const category = searchParams.get('category');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const inStock = searchParams.get('inStock');
-    const featured = searchParams.get('featured');
+    const search = searchParams.get('search') || undefined;
+    const categorySlug = searchParams.get('category') || undefined;
+    const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined;
+    const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined;
+    const inStock = searchParams.get('inStock') === 'true' ? true : undefined;
+    const featured = searchParams.get('featured') === 'true' ? true : undefined;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
-    let filteredProducts = products;
-
-    // Apply search
-    if (search) {
-      filteredProducts = searchProducts(search);
-    }
-
-    // Apply filters
-    if (category) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.category.slug === category
-      );
-    }
-
-    if (minPrice) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.price >= parseFloat(minPrice)
-      );
-    }
-
-    if (maxPrice) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.price <= parseFloat(maxPrice)
-      );
-    }
-
-    if (inStock === 'true') {
-      filteredProducts = filteredProducts.filter((product) => product.inStock);
-    }
-
-    if (featured === 'true') {
-      filteredProducts = filteredProducts.filter((product) => product.featured);
-    }
-
-    // Pagination
-    const totalProducts = filteredProducts.length;
-    const totalPages = Math.ceil(totalProducts / limit);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+    // Fetch products from Prisma with filters
+    const result = await getPublishedProducts({
+      search,
+      categorySlug,
+      minPrice,
+      maxPrice,
+      inStock,
+      featured,
+      page,
+      limit,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        products: paginatedProducts,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalProducts,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
-        },
+        products: result.products,
+        pagination: result.pagination,
       },
     });
   } catch (error) {

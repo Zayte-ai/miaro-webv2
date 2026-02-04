@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,24 +11,32 @@ import { Toast } from "@/components/Toast";
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, updateQuantity, removeItem, clearCart } = useCartStore();
+  const { cart, updateQuantity, removeItem, clearCart, refreshPrices } = useCartStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const handleQuantityChange = (
+  // Refresh prices when the cart page loads
+  useEffect(() => {
+    refreshPrices();
+  }, [refreshPrices]);
+
+  const handleQuantityChange = async (
     productId: string,
-    sizeId: string,
-    colorId: string,
+    sizeId: string | null,
+    colorId: string | null,
     newQuantity: number
   ) => {
-    updateQuantity(productId, sizeId, colorId, newQuantity);
+    const result = await updateQuantity(productId, sizeId, colorId, newQuantity);
+    if (!result.success) {
+      setToast({ message: result.error || 'Failed to update quantity', type: 'error' });
+    }
   };
 
   const handleRemoveItem = (
     productId: string,
-    sizeId: string,
-    colorId: string,
+    sizeId: string | null,
+    colorId: string | null,
     productName: string
   ) => {
     setToast({ message: `${productName} removed from cart`, type: "success" });
@@ -104,7 +112,7 @@ export default function CartPage() {
               </button>
             </div>
             <p className="text-gray-600 mt-1">
-              {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"} in your
+              {cart.items.length} {cart.items.length === 1 ? "item" : "items"} in your
               cart
             </p>
           </div>
@@ -114,17 +122,33 @@ export default function CartPage() {
             <div className="space-y-6">
               {cart.items.map((item) => (
                 <div
-                  key={`${item.product.id}-${item.selectedSize.id}-${item.selectedColor.id}`}
+                  key={`${item.product.id}-${item.selectedSize?.id || 'no-size'}-${item.selectedColor?.id || 'no-color'}`}
                   className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg"
                 >
                   {/* Product Image */}
                   <div className="flex-shrink-0 w-20 h-20 relative">
-                    <Image
-                      src={item.product.images[0] || "/images/placeholder.svg"}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover rounded-md"
-                    />
+                    {(() => {
+                      const imageUrl = item.product.images?.[0];
+                      // Gérer les cas où imageUrl peut être un objet ou une string
+                      let validUrl = "/images/placeholder.svg";
+                      
+                      if (imageUrl) {
+                        if (typeof imageUrl === 'string' && imageUrl.trim() !== '') {
+                          validUrl = imageUrl;
+                        } else if (typeof imageUrl === 'object' && 'url' in imageUrl && imageUrl.url) {
+                          validUrl = imageUrl.url;
+                        }
+                      }
+                      
+                      return (
+                        <Image
+                          src={validUrl}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover rounded-md"
+                        />
+                      );
+                    })()}
                   </div>
 
                   {/* Product Details */}
@@ -133,8 +157,8 @@ export default function CartPage() {
                       {item.product.name}
                     </h3>
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                      <span>Size: {item.selectedSize.value}</span>
-                      <span>Color: {item.selectedColor.name}</span>
+                      {item.selectedSize && <span>Size: {item.selectedSize.value}</span>}
+                      {item.selectedColor && <span>Color: {item.selectedColor.name}</span>}
                     </div>
                     <p className="text-lg font-semibold text-gray-900 mt-2">
                       {formatPrice(item.product.price)}
@@ -147,8 +171,8 @@ export default function CartPage() {
                       onClick={() =>
                         handleQuantityChange(
                           item.product.id,
-                          item.selectedSize.id,
-                          item.selectedColor.id,
+                          item.selectedSize?.id || null,
+                          item.selectedColor?.id || null,
                           item.quantity - 1
                         )
                       }
@@ -164,8 +188,8 @@ export default function CartPage() {
                       onClick={() =>
                         handleQuantityChange(
                           item.product.id,
-                          item.selectedSize.id,
-                          item.selectedColor.id,
+                          item.selectedSize?.id || null,
+                          item.selectedColor?.id || null,
                           item.quantity + 1
                         )
                       }
@@ -187,8 +211,8 @@ export default function CartPage() {
                     onClick={() =>
                       handleRemoveItem(
                         item.product.id,
-                        item.selectedSize.id,
-                        item.selectedColor.id,
+                        item.selectedSize?.id || null,
+                        item.selectedColor?.id || null,
                         item.product.name
                       )
                     }

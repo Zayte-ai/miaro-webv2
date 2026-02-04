@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProductById } from '@/lib/data';
+import { getPublishedProductById, getPublishedProductBySlug } from '@/lib/prisma-products';
 
 export async function GET(
   request: NextRequest,
@@ -7,8 +7,16 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const product = getProductById(id);
 
+    // Try to fetch product by ID first, then by slug
+    let product = await getPublishedProductById(id);
+
+    // If not found by ID, try by slug
+    if (!product) {
+      product = await getPublishedProductBySlug(id);
+    }
+
+    // Product not found or not published
     if (!product) {
       return NextResponse.json(
         {
@@ -21,14 +29,20 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: product,
+      data: {
+        product,
+      },
     });
   } catch (error) {
     console.error('Error fetching product:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch product',
+        error: error instanceof Error ? error.message : 'Failed to fetch product',
       },
       { status: 500 }
     );

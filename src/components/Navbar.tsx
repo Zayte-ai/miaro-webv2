@@ -18,6 +18,10 @@ export default function Navbar() {
     { name: "Contact", href: "/contact" },
   ];
 
+  const accountNavigation = [
+    { name: "Mon Compte", href: "/account" },
+  ];
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50 select-none">
       {/* League Spartan font import for navbar links */}
@@ -56,18 +60,19 @@ export default function Navbar() {
           {/* Right side icons */}
           <div className="flex items-center space-x-5">
             {/* Search */}
-            <button
+            {/* <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               <Search className="h-6 w-6" />
-            </button>
+            </button> */}
 
             {/* User */}
             {isAuthenticated ? (
               <Link
-                href="/profile"
+                href="/account"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
+                title="Mon Compte"
               >
                 <User className="h-6 w-6" />
               </Link>
@@ -75,6 +80,7 @@ export default function Navbar() {
               <Link
                 href="/auth/login"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
+                title="Se connecter"
               >
                 <User className="h-6 w-6" />
               </Link>
@@ -108,7 +114,7 @@ export default function Navbar() {
         </div>
 
         {/* Search Bar (Mobile/Desktop) */}
-        {isSearchOpen && (
+        {/* {isSearchOpen && (
           <div className="py-4 border-t">
             <input
               type="text"
@@ -116,7 +122,7 @@ export default function Navbar() {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
           </div>
-        )}
+        )} */}
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
@@ -133,6 +139,16 @@ export default function Navbar() {
                   {item.name}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <Link
+                  href="/account"
+                  className="text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium transition-colors"
+                  style={{ fontFamily: "League Spartan, sans-serif" }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Mon Compte
+                </Link>
+              )}
             </div>
           </div>
         )}

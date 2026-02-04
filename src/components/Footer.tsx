@@ -14,9 +14,6 @@ export default function Footer() {
         </div>
         <div className="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Stay Updated</h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Be the first to know about new collections, exclusive offers, and style insights.
-          </p>
           <form className="w-full flex flex-col items-center justify-center">
             <div className="w-full max-w-md flex flex-col sm:flex-row gap-4 items-center justify-center">
               <input
@@ -44,15 +41,15 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="text-2xl font-bold text-black hover:text-black">
-              MaisonMiaro
+          <div className="col-span-1 md:col-span-2 flex flex-col items-center md:items-start">
+            <Link href="/" className="block mb-4 text-center" style={{ fontFamily: "Instrument Serif, serif" }}>
+              <span className="block text-sm md:text-lg font-bold text-black">
+                MAISON
+              </span>
+              <span className="block text-3xl md:text-4xl font-normal text-black leading-none">
+                MIARO
+              </span>
             </Link>
-            <p className="mt-4 text-gray-600 max-w-md">
-              Crafting timeless clothing pieces with attention to detail and
-              quality. Each piece tells a story of modern elegance and
-              sustainable fashion.
-            </p>
             <div className="flex space-x-4 mt-6">
                 <a
                 href="https://www.instagram.com/maison.miaro?igsh=NndkdGMweHk3Zjhs"
@@ -76,7 +73,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ fontFamily: "League Spartan, sans-serif" }}>Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -86,6 +83,7 @@ export default function Footer() {
                   Shop All
                 </Link>
               </li>
+              {/* 
               <li>
                 <Link
                   href="/shop/t-shirts"
@@ -102,6 +100,15 @@ export default function Footer() {
                   Hoodies
                 </Link>
               </li>
+               <li>
+                <Link
+                  href="/shop/jackets"
+                  className="text-black hover:text-black transition-colors"
+                >
+                  Jackets
+                </Link>
+              </li>
+              */}
               <li>
                 <Link
                   href="/shop/jeans"
@@ -110,20 +117,15 @@ export default function Footer() {
                   Jeans
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/shop/jackets"
-                  className="text-black hover:text-black transition-colors"
-                >
-                  Jackets
-                </Link>
-              </li>
+             
             </ul>
           </div>
+          
+
 
           {/* Customer Care */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Customer Care</h3>
+            <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ fontFamily: "League Spartan, sans-serif" }}>Customer Care</h3>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -147,22 +149,6 @@ export default function Footer() {
                   className="text-black hover:text-black transition-colors"
                 >
                   Returns
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/size-guide"
-                  className="text-black hover:text-black transition-colors"
-                >
-                  Size Guide
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faq"
-                  className="text-black hover:text-black transition-colors"
-                >
-                  FAQ
                 </Link>
               </li>
             </ul>

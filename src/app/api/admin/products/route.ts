@@ -62,8 +62,23 @@ function handleError(error: unknown) {
     return NextResponse.json({ success: false, message: 'Duplicate value detected' }, { status: 409 });
   }
 
-  console.error('[ADMIN_PRODUCTS_API]', error);
-  return NextResponse.json({ success: false, message: 'Unexpected server error' }, { status: 500 });
+  const err = error as any;
+  console.error('[ADMIN_PRODUCTS_API]', err);
+
+  const responseBody: any = { success: false, message: 'Unexpected server error' };
+  if (err && err.message) {
+    responseBody.message = err.message;
+  }
+
+  // In development include the error name and stack to help debugging (do not expose in production).
+  if (process.env.NODE_ENV !== 'production') {
+    responseBody.debug = {
+      name: err?.name,
+      stack: err?.stack,
+    };
+  }
+
+  return NextResponse.json(responseBody, { status: 500 });
 }
 
 // GET /api/admin/products
@@ -105,6 +120,15 @@ interface CreateProductPayload {
   images?: Array<{ url: string; altText?: string | null; sortOrder?: number }>;
   model3d?: string | null;
   imageFrames?: number | null;
+  variants?: Array<{
+    name: string;
+    sku?: string;
+    price?: number;
+    comparePrice?: number;
+    options: {
+      [optionName: string]: string;
+    };
+  }>;
 }
 
 // POST /api/admin/products
@@ -142,6 +166,75 @@ export async function POST(request: NextRequest) {
     const lowStockThreshold = payload.lowStockThreshold ?? 10;
     const allowBackorder = payload.allowBackorder ?? false;
 
+    // Pre-process variants to create options/values first
+    const variantData: any[] = [];
+    if (payload.variants && payload.variants.length > 0) {
+      for (const variant of payload.variants) {
+        const variantOptions: any[] = [];
+        for (const [optionName, value] of Object.entries(variant.options)) {
+          // Determine option type based on name
+          let optionType = 'OTHER';
+          const lowerName = optionName.toLowerCase();
+          if (lowerName.includes('size')) optionType = 'SIZE';
+          else if (lowerName.includes('color')) optionType = 'COLOR';
+          else if (lowerName.includes('material')) optionType = 'MATERIAL';
+          else if (lowerName.includes('style')) optionType = 'STYLE';
+
+          // Get or create option
+          let option = await prisma.option.findUnique({
+            where: { name: optionName },
+          });
+          if (!option) {
+            option = await prisma.option.create({
+              data: { name: optionName, type: optionType as any },
+            });
+          }
+
+          // Get or create option value (kept for reference/labels)
+          let optionValue = await prisma.optionValue.findFirst({
+            where: {
+              optionId: option.id,
+              value: value as string,
+            },
+          });
+          if (!optionValue) {
+            optionValue = await prisma.optionValue.create({
+              data: {
+                optionId: option.id,
+                value: value as string,
+              },
+            });
+          }
+
+          // The VariantOption model stores `optionId` and `value` (not an `optionValueId`).
+          // Create the nested variant option using the option id and the raw value string.
+          variantOptions.push({
+            optionId: option.id,
+            value: value as string,
+          });
+        }
+
+        variantData.push({
+          name: variant.name,
+          sku: variant.sku ?? null,
+          price: variant.price ?? payload.price,
+          comparePrice: variant.comparePrice ?? payload.comparePrice ?? null,
+          variantOptions: {
+            create: variantOptions,
+          },
+          inventory: trackInventory
+            ? {
+                create: {
+                  quantity: initialStock,
+                  lowStockThreshold,
+                  allowBackorder,
+                },
+              }
+            : undefined,
+        });
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         name: payload.name.trim(),
@@ -178,6 +271,7 @@ export async function POST(request: NextRequest) {
               },
             }
           : undefined,
+        variants: variantData.length > 0 ? { create: variantData } : undefined,
       },
       include: productIncludes,
     });

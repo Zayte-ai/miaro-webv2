@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientInit from "@/components/ClientInit";
+import "@/lib/env"; // Validate environment variables on startup
 
 export const metadata: Metadata = {
   title: "MaisonMiaro - Premium Clothing",
@@ -17,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className="font-sans antialiased min-h-screen flex flex-col"
       >
