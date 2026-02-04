@@ -221,7 +221,6 @@ export default function NewProductPage() {
         throw new Error(data.message ?? "Failed to create product");
       }
 
-      alert("Product created successfully");
       router.push("/admin/dashboard/products");
     } catch (error) {
       console.error("Error creating product", error);
