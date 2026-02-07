@@ -212,27 +212,10 @@ export async function POST(request: NextRequest) {
         allowed_countries: ['CA', 'US', 'FR', 'BE', 'CH', 'LU', 'MC', 'GB', 'DE', 'IT', 'ES', 'PT', 'NL'],
       },
       
-      // Options de livraison (optionnel)
+      // Options de livraison - Utilise le taux Stripe configuré
       shipping_options: [
         {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: {
-              amount: 0, // Livraison gratuite
-              currency: 'cad',
-            },
-            display_name: 'Livraison gratuite',
-            delivery_estimate: {
-              minimum: {
-                unit: 'business_day',
-                value: 5,
-              },
-              maximum: {
-                unit: 'business_day',
-                value: 10,
-              },
-            },
-          },
+          shipping_rate: 'shr_1SyGBGC73ocS8eso5ZkpaiAU', // Livraison - 10,00 $CA
         },
       ],
       
