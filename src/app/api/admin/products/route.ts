@@ -39,6 +39,7 @@ function buildProductResponse(product: any) {
     price: product.price,
     comparePrice: product.comparePrice,
     costPrice: product.costPrice,
+    stripePriceId: product.stripePriceId,
     category: product.category,
     images: product.images,
     inventory: product.inventory,
@@ -110,6 +111,7 @@ interface CreateProductPayload {
   comparePrice?: number | null;
   costPrice?: number | null;
   sku?: string | null;
+  stripePriceId?: string | null;
   categoryId: string;
   isActive?: boolean;
   isFeatured?: boolean;
@@ -245,6 +247,7 @@ export async function POST(request: NextRequest) {
         comparePrice: payload.comparePrice ?? null,
         costPrice: payload.costPrice ?? null,
         sku: payload.sku?.trim() ?? null,
+        stripePriceId: payload.stripePriceId?.trim() ?? null,
         categoryId: payload.categoryId,
         isActive: payload.isActive ?? true,
         isFeatured: payload.isFeatured ?? false,

@@ -240,6 +240,7 @@ model Product {
   imageFrames         Int                  @default(35)
   model3d             String?
   rotationImage360Url String?
+  stripePriceId       String?
   categoryId          String
   isFeatured          Boolean              @default(false)
   isActive            Boolean              @default(true)

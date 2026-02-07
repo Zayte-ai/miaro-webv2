@@ -7,7 +7,7 @@ import { verifyAdminToken } from "@/lib/admin-auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Vérifier l'authentification admin
@@ -29,7 +29,7 @@ export async function POST(
       );
     }
 
-    const productId = params.id;
+    const { id: productId } = await params;
 
     // Vérifier que le produit existe
     const product = await prisma.product.findUnique({
@@ -123,7 +123,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Vérifier l'authentification admin
@@ -145,7 +145,7 @@ export async function DELETE(
       );
     }
 
-    const productId = params.id;
+    const { id: productId } = await params;
 
     // Vérifier que le produit existe
     const product = await prisma.product.findUnique({

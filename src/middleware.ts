@@ -56,11 +56,11 @@ export function middleware(request: NextRequest) {
   // Add CSP header
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.google-analytics.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.google-analytics.com https://static.cloudflareinsights.com blob:;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' data: https: blob:;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://api.stripe.com https://www.google-analytics.com;
+    connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://cloudflareinsights.com;
     frame-src 'self' https://js.stripe.com https://hooks.stripe.com;
     object-src 'none';
     base-uri 'self';

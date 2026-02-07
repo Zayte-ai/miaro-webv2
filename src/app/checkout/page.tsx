@@ -5,21 +5,12 @@ import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout,
-} from "@stripe/react-stripe-js";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart } = useCartStore();
   const [mounted, setMounted] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,12 +24,13 @@ export default function CheckoutPage() {
     }
   }, [mounted, cart.items.length, router]);
 
-  // Create Stripe Checkout Session
+  // Create Stripe Checkout Session and redirect
   useEffect(() => {
     if (!mounted || cart.items.length === 0) return;
 
-    const createSession = async () => {
+    const createSessionAndRedirect = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch(
           "/api/payments/stripe/create-checkout-session",
           {
@@ -76,14 +68,20 @@ export default function CheckoutPage() {
           throw new Error(data.error || "Failed to create checkout session");
         }
 
-        setClientSecret(data.clientSecret);
+        // Redirect to Stripe hosted checkout page
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error("No checkout URL received");
+        }
       } catch (err) {
         console.error("Checkout error:", err);
         setError(err instanceof Error ? err.message : "Unable to load checkout");
+        setIsLoading(false);
       }
     };
 
-    createSession();
+    createSessionAndRedirect();
   }, [mounted, cart.items]);
 
   if (!mounted) {
@@ -135,37 +133,13 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!clientSecret) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Preparing checkout...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Show loading screen while redirecting to Stripe
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
-          <p className="text-gray-600">
-            Complete your purchase securely with Stripe
-          </p>
-        </div>
-
-        {/* Stripe Embedded Checkout */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <EmbeddedCheckoutProvider
-            stripe={stripePromise}
-            options={{ clientSecret }}
-          >
-            <EmbeddedCheckout />
-          </EmbeddedCheckoutProvider>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Redirecting to secure checkout...</h2>
+        <p className="text-gray-600">Please wait while we redirect you to Stripe</p>
       </div>
     </div>
   );

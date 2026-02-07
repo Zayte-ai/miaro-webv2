@@ -20,11 +20,11 @@ import { prisma } from '@/lib/db';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { sizeId, colorId, requestedQuantity } = await request.json();
-    const productId = params.id;
+    const { id: productId } = await params;
 
     console.log('[STOCK CHECK]', { productId, sizeId, colorId, requestedQuantity });
 

@@ -20,7 +20,10 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
-    unoptimized: true, // Disable image optimization for local JPG files
+    // Optimiser les images en production
+    unoptimized: process.env.NODE_ENV === 'development',
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   // Compression enabled for better performance
   compress: true,
@@ -45,6 +48,8 @@ const nextConfig: NextConfig = {
       },
     },
   }),
+  // Explicitly set the workspace root to avoid lockfile detection issues
+  outputFileTracingRoot: __dirname,
 };
 
 export default nextConfig;

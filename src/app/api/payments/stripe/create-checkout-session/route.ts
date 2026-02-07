@@ -120,20 +120,42 @@ export async function POST(request: NextRequest) {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     
     for (const item of items) {
-      // Use PRICE_MAP for product-to-price mapping
-      const priceId = PRICE_MAP[item.productId];
+      // Fetch product from database to get stripePriceId
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        select: { id: true, name: true, stripePriceId: true, price: true },
+      });
 
-      // Security: Reject if no price mapping found
-      if (!priceId) {
-        console.error(`No Stripe price found for product: ${item.productId}`);
+      if (!product) {
         return NextResponse.json(
-          { error: `Product ${item.productId} not configured for checkout. Please contact support.` },
+          { error: `Product ${item.productId} not found` },
+          { status: 404 }
+        );
+      }
+
+      // Use stripePriceId from database (preferred) or fallback to PRICE_MAP
+      let priceId = product.stripePriceId;
+      
+      if (!priceId) {
+        // Fallback to PRICE_MAP for backward compatibility
+        priceId = PRICE_MAP[item.productId];
+      }
+
+      // Security: Reject if no price ID found
+      if (!priceId) {
+        console.error(`No Stripe price found for product: ${item.productId} (${product.name})`);
+        return NextResponse.json(
+          { 
+            error: `Product "${product.name}" is not configured for checkout. Please add a Stripe Price ID in the admin panel or contact support.`,
+            code: 'MISSING_STRIPE_PRICE_ID',
+            productId: item.productId,
+          },
           { status: 400 }
         );
       }
 
       // Use Stripe price_id (NOT price_data)
-      console.log(`💰 DEBUG - Using price_id: ${priceId} for product: ${item.productId}`);
+      console.log(`💰 DEBUG - Using price_id: ${priceId} for product: ${product.name} (${item.productId})`);
       lineItems.push({
         price: priceId,
         quantity: item.quantity || 1,
@@ -165,28 +187,41 @@ export async function POST(request: NextRequest) {
 
     // Create Checkout Session with secure price mapping
     console.log('🛒 DEBUG - Creating checkout session with line items:', JSON.stringify(lineItems, null, 2));
+    
+    // Payment methods disponibles:
+    // - 'card': Cartes bancaires (Visa, Mastercard, Amex, etc.)
+    // NOTE: Pour activer PayPal, allez sur https://dashboard.stripe.com/settings/payment_methods
     const session = await stripe.checkout.sessions.create({
       ...customer,
-      ui_mode: 'embedded',
-      payment_method_types: ['card'],
+      
+      // Méthodes de paiement acceptées
+      payment_method_types: ['card'], // Ajoutez 'paypal' une fois activé dans Stripe
+      
       mode: 'payment',
       line_items: lineItems,
-      return_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      automatic_tax: {
-        enabled: true,
-      },
+      
+      // URLs de redirection
+      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/checkout`,
+      
+      // Collection de l'adresse de facturation
+      billing_address_collection: 'required',
+      
+      // Collection de l'adresse de livraison
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA', 'GB', 'FR', 'DE', 'IT', 'ES', 'AU', 'NZ'],
+        allowed_countries: ['CA', 'US', 'FR', 'BE', 'CH', 'LU', 'MC', 'GB', 'DE', 'IT', 'ES', 'PT', 'NL'],
       },
+      
+      // Options de livraison (optionnel)
       shipping_options: [
         {
           shipping_rate_data: {
             type: 'fixed_amount',
             fixed_amount: {
-              amount: 0,
+              amount: 0, // Livraison gratuite
               currency: 'cad',
             },
-            display_name: 'Free shipping',
+            display_name: 'Livraison gratuite',
             delivery_estimate: {
               minimum: {
                 unit: 'business_day',
@@ -194,32 +229,19 @@ export async function POST(request: NextRequest) {
               },
               maximum: {
                 unit: 'business_day',
-                value: 7,
-              },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: {
-              amount: 1500,
-              currency: 'cad',
-            },
-            display_name: 'Express shipping',
-            delivery_estimate: {
-              minimum: {
-                unit: 'business_day',
-                value: 1,
-              },
-              maximum: {
-                unit: 'business_day',
-                value: 3,
+                value: 10,
               },
             },
           },
         },
       ],
+      
+      // Taxes automatiques (si configuré dans Stripe)
+      automatic_tax: {
+        enabled: true,
+      },
+      
+      // Métadonnées personnalisées
       metadata: {
         ...metadata,
         orderSource: 'web',
@@ -227,11 +249,10 @@ export async function POST(request: NextRequest) {
     });
 
     console.log('✅ Session créée:', session.id);
-    console.log('📋 Client Secret:', session.client_secret ? 'Présent' : '❌ MANQUANT');
-    console.log('🔗 URL:', session.url);
+    console.log('� URL:', session.url);
 
     return NextResponse.json({
-      clientSecret: session.client_secret,
+      url: session.url,
       sessionId: session.id,
     });
   } catch (error) {

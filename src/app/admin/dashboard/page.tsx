@@ -75,7 +75,10 @@ export default function AdminDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch dashboard stats");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to fetch dashboard stats (${response.status})`;
+        console.error("[DASHBOARD] API Error:", errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -83,7 +86,11 @@ export default function AdminDashboard() {
       setRecentOrders(data.recentOrders);
       setLowStockProducts(data.lowStockProducts);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("[DASHBOARD] Error fetching dashboard data:", error);
+      setToast({ 
+        message: error instanceof Error ? error.message : "Failed to load dashboard data", 
+        type: "error" 
+      });
     } finally {
       setLoading(false);
     }

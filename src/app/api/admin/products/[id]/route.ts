@@ -91,6 +91,7 @@ interface UpdateProductPayload {
   comparePrice?: number | null;
   costPrice?: number | null;
   sku?: string | null;
+  stripePriceId?: string | null;
   categoryId?: string;
   isActive?: boolean;
   isFeatured?: boolean;
@@ -158,6 +159,9 @@ export async function PUT(
     }
     if (payload.sku !== undefined) {
       updateData.sku = payload.sku?.trim() ?? null;
+    }
+    if (payload.stripePriceId !== undefined) {
+      updateData.stripePriceId = payload.stripePriceId?.trim() ?? null;
     }
     if (payload.categoryId !== undefined) {
       updateData.categoryId = payload.categoryId;

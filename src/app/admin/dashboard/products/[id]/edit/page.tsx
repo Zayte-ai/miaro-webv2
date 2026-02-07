@@ -41,6 +41,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     sku: "",
     comparePrice: "",
     costPrice: "",
+    stripePriceId: "",
     isActive: true,
     featured: false,
     images: [] as string[],
@@ -82,6 +83,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
             sku: product.sku || "",
             comparePrice: String(product.comparePrice || ""),
             costPrice: String(product.costPrice || ""),
+            stripePriceId: product.stripePriceId || "",
             isActive: product.isActive ?? true,
             featured: product.isFeatured ?? false,
             images: product.images?.map((img: any) => img.url) || [],
@@ -207,6 +209,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       costPrice: productForm.costPrice
         ? parseFloat(productForm.costPrice)
         : undefined,
+      stripePriceId: productForm.stripePriceId || undefined,
       isActive: productForm.isActive,
       isFeatured: productForm.featured,
       images: productForm.images.map((url, index) => ({
@@ -362,6 +365,31 @@ export default function EditProductPage({ params }: EditProductPageProps) {
             onChange={handleInputChange}
             className="w-full rounded border px-3 py-2"
           />
+
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <label className="mb-2 block text-sm font-medium text-blue-900">
+              Stripe Price ID 💳
+            </label>
+            <input
+              name="stripePriceId"
+              placeholder="price_1xxxxxxxxxxxxx (from Stripe Dashboard)"
+              value={productForm.stripePriceId}
+              onChange={handleInputChange}
+              className="w-full rounded border border-blue-300 px-3 py-2"
+            />
+            <p className="mt-2 text-xs text-blue-700">
+              📋 Create a price in{" "}
+              <a
+                href="https://dashboard.stripe.com/products"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-900"
+              >
+                Stripe Dashboard
+              </a>{" "}
+              and paste the Price ID here (e.g., price_1SwrmnC73ocS8esoPWpYgiHD)
+            </p>
+          </div>
 
           <input
             name="model3d"
