@@ -52,8 +52,8 @@
 ## 💳 Configuration Stripe
 
 ### Mode LIVE Activé ✅
-- `pk_live_51SEEqEC73ocS8esoorllocVVonhGsofRZ9whYY34KGVumowedaP2tWBAvsG5cfmJBHmAGrRxhyfiNZmrAYr4KfQ100VfOKDvrA`
-- `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`
+- `pk_live_51SEE...` (clé publique)
+- `sk_live_51SEE...` (clé secrète)
 
 ### Fonctionnalités
 - ✅ Checkout embarqué (Embedded Checkout)
